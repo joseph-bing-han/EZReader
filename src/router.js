@@ -11,19 +11,22 @@ export default function RouterConfig({ history, app }) {
   return (
     <Router history={history}>
       <Switch>
-        <DefaultLayout path={Links.HOME} component={Pages.Home} />
-        <Route path="*"
+        <DefaultLayout path={Links.HOME} exact component={Pages.Home} />
+        <DefaultLayout path={Links.SETTING} exact component={Pages.Home} />
+        <Route
+          path='*'
           component={() => (
             <View>
-              <Text style={{
-                marginTop: 40,
-                color: 'red',
-              }}
+              <Text
+                style={{
+                  marginTop: 40,
+                  color: 'red',
+                }}
               >
                 Oops! Not Found
               </Text>
               <Button
-                title="Go Back"
+                title='Go Back'
                 onPress={() => {
                   if (history.index > 0) {
                     history.goBack();

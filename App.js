@@ -1,4 +1,4 @@
-import { Provider } from '@ant-design/react-native';
+import Provider from '@ant-design/react-native/lib/provider/index';
 import dva from 'dva';
 import createLoading from 'dva-loading';
 import { AppLoading } from 'expo';
@@ -7,7 +7,7 @@ import { createMemoryHistory } from 'history';
 import React from 'react';
 import models from './src/models';
 import routers from './src/router';
-
+import defaultThemes from './src/themes';
 
 console.disableYellowBox = true;
 
@@ -36,15 +36,9 @@ dvaApp.use(createLoading());
 
 const DvaApp = dvaApp.start();
 
-class App extends React.Component {
+export default class App extends React.PureComponent {
   state = {
-    theme: null,
-    currentTheme: null,
     isReady: false,
-  };
-
-  changeTheme = (theme, currentTheme) => {
-    this.setState({ theme, currentTheme });
   };
 
   async componentDidMount() {
@@ -64,16 +58,14 @@ class App extends React.Component {
   }
 
   render() {
-    const { theme, currentTheme, isReady } = this.state;
+    const { isReady } = this.state;
     if (!isReady) {
       return <AppLoading />;
     }
     return (
-      <Provider theme={theme}>
+      <Provider theme={defaultThemes}>
         <DvaApp />
       </Provider>
     );
   }
 }
-
-export default () => (<App />);
