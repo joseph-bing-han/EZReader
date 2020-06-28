@@ -5,6 +5,7 @@ import { AppLoading } from 'expo';
 import * as Font from 'expo-font';
 import { createMemoryHistory } from 'history';
 import React from 'react';
+import { BackHandler } from 'react-native';
 import models from './src/models';
 import routers from './src/router';
 import defaultThemes from './src/themes';
@@ -42,6 +43,21 @@ export default class App extends React.PureComponent {
   };
 
   async componentDidMount() {
+    BackHandler.addEventListener('hardwareBackPress', () => {
+      const { _history: history } = dvaApp;
+      if (history) {
+        if (history.goBack && history.index > 0) {
+          history.goBack();
+          return true;
+        }
+        if (history.index === 0) {
+          BackHandler.exitApp();
+          return true;
+        }
+      }
+      return false;
+    });
+
     await Font.loadAsync(
       'antoutline',
       // eslint-disable-next-line

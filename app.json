@@ -1,11 +1,10 @@
 {
   "expo": {
-    "name": "EZReader",
+    "name": "易读EZReader",
     "slug": "EZReader",
     "platforms": [
       "ios",
-      "android",
-      "web"
+      "android"
     ],
     "version": "1.0.0",
     "orientation": "portrait",

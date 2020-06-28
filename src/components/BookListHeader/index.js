@@ -9,6 +9,7 @@ export default class BookListHeader extends React.PureComponent {
     total: PropTypes.number.isRequired,
     onPress: PropTypes.func.isRequired,
   };
+
   render() {
     return (
       <View style={styles.body}>
