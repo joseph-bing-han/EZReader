@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     paddingLeft: 8,
-    width: 240,
+    width: 220,
   },
   infoDiv: {
     paddingTop: 6,

@@ -1,4 +1,4 @@
-import { ActionSheet, Modal, Slider } from '@ant-design/react-native';
+import { ActionSheet, ActivityIndicator, Modal, Slider } from '@ant-design/react-native';
 import * as Base64 from 'Base64';
 import { connect, routerRedux } from 'dva';
 import * as FileSystem from 'expo-file-system';
@@ -26,6 +26,7 @@ export default class BookViewer extends React.Component {
     currentPage: -1,
     isSpeaking: false,
     modalVisible: false,
+    loading: true,
   };
 
   componentDidMount() {
@@ -60,7 +61,7 @@ export default class BookViewer extends React.Component {
       iconv.skipDecodeWarning = true;
       const convertContext = iconv.decode(Base64.atob(context), 'gbk');
       this.setState({
-        currentPosition: currentBook.position,
+        loading: false,
         currentPage: currentBook.page,
       });
       this.calculatePage(convertContext);
@@ -165,7 +166,7 @@ export default class BookViewer extends React.Component {
 
   goNextPage = () => {
     const { pages, currentPage } = this.state;
-    if (currentPage > 0 && currentPage < pages.length) {
+    if ((currentPage + 1) < pages.length) {
       this.props.dispatch({
         type: 'home/changeBookPage',
         page: currentPage + 1,
@@ -205,30 +206,43 @@ export default class BookViewer extends React.Component {
 
   render() {
     const { backgroundColor, fontSize } = this.props.setting;
-    const { pages, currentPage } = this.state;
+    const { pages, currentPage, loading } = this.state;
     const percent = Math.round((currentPage / pages.length) * 10000) / 100;
     return (
       <View>
-        <TouchableWithoutFeedback onPress={this.touchScreen} onLongPress={this.showActionSheet}>
-          <View style={[styles.body, { backgroundColor }]}>
-            {pages.length > 0 && (
-              <Text
-                onLayout={this.onTextLayout}
-                style={{
-                  fontSize,
-                  paddingTop: 14,
-                  paddingBottom: 14,
-                  paddingLeft: 4,
-                  paddingRight: 4,
-                }}
-              >
-                {pages[currentPage]}
-              </Text>
-            )}
-
+        {loading && (
+          <View
+            style={[styles.body, {
+              backgroundColor,
+              justifyContent: 'center',
+              alignContent: 'center',
+            }]}
+          >
+            <ActivityIndicator size='large' />
           </View>
+        )}
+        {!loading && (
+          <TouchableWithoutFeedback onPress={this.touchScreen} onLongPress={this.showActionSheet}>
+            <View style={[styles.body, { backgroundColor }]}>
+              {pages.length > 0 && (
+                <Text
+                  onLayout={this.onTextLayout}
+                  style={{
+                    fontSize,
+                    paddingTop: 14,
+                    paddingBottom: 14,
+                    paddingLeft: 4,
+                    paddingRight: 4,
+                  }}
+                >
+                  {pages[currentPage]}
+                </Text>
+              )}
 
-        </TouchableWithoutFeedback>
+            </View>
+
+          </TouchableWithoutFeedback>
+        )}
         <Modal
           transparent
           maskClosable
