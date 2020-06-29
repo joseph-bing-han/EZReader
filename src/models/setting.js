@@ -1,10 +1,14 @@
+import Sort from '../constants/Short';
 import {
   getBackgroundColor,
+  getBy,
   getFontSize,
+  getOrder,
   getSpeakPitch,
   getSpeakRate,
   setBackgroundColor,
   setFontSize,
+  setOrderBy,
   setSpeakPitch,
   setSpeakRate,
 } from '../services/setting';
@@ -17,6 +21,8 @@ export default {
     fontSize: 20,
     speakPitch: 1.0,
     speakRate: 1.0,
+    order: Sort.ORDER_UPDATE,
+    by: Sort.BY_DESC,
   },
   effects: {
     * getSetting(_, { call, put }) {
@@ -24,6 +30,8 @@ export default {
       const fontSize = yield call(getFontSize);
       const speakPitch = yield call(getSpeakPitch);
       const speakRate = yield call(getSpeakRate);
+      const order = yield call(getOrder);
+      const by = yield call(getBy);
       yield put({
         type: 'saveColor',
         backgroundColor,
@@ -39,6 +47,11 @@ export default {
       yield put({
         type: 'saveRate',
         speakRate,
+      });
+      yield put({
+        type: 'saveOrderBy',
+        order,
+        by,
       });
     },
     * updateBackgroundColor({ color }, { call, put }) {
@@ -73,6 +86,17 @@ export default {
         speakRate,
       });
     },
+    * updateOrderBy({ order, by }, { call, put }) {
+      yield call(setOrderBy, order, by);
+      const nOrder = yield call(getOrder);
+      const nBy = yield call(getBy);
+      yield put({
+        type: 'saveOrderBy',
+        order: nOrder,
+        by: nBy,
+      });
+    },
+
   },
   reducers: {
     saveColor(state, { backgroundColor }) {
@@ -97,6 +121,13 @@ export default {
       return {
         ...state,
         speakRate,
+      };
+    },
+    saveOrderBy(state, { order, by }) {
+      return {
+        ...state,
+        order,
+        by,
       };
     },
   },

@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { BaseModel, types } from 'expo-sqlite-orm';
+import { getBy, getOrder } from './setting';
 
 export default class Book extends BaseModel {
   // eslint-disable-next-line no-useless-constructor
@@ -50,7 +51,10 @@ export default class Book extends BaseModel {
 
 export async function getBookList() {
   Book.createTable();
-  return Book.query({ order: 'updated_at DESC' });
+  const nOrder = await getOrder();
+  const nBy = await getBy();
+  const order = `${nOrder} ${nBy}`;
+  return Book.query({ order });
 }
 
 export async function retrieveBookByName(name = '') {
