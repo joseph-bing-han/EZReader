@@ -30,6 +30,7 @@ export default class BookViewer extends React.Component {
   };
 
   componentDidMount() {
+    activateKeepAwake();
     const { params } = this.props.match;
     if (params?.id) {
       this.props.dispatch({
@@ -99,7 +100,6 @@ export default class BookViewer extends React.Component {
     });
     this.setState({
       pages,
-      currentPage: 0,
     });
   };
 
@@ -128,11 +128,9 @@ export default class BookViewer extends React.Component {
         if (buttonIndex === 0) {
           if (isSpeaking) {
             this._speak = false;
-            deactivateKeepAwake();
             Speech.stop();
           } else {
             this._speak = true;
-            activateKeepAwake();
             this.startSpeak();
           }
         } else if (buttonIndex === 1) {

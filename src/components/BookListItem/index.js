@@ -58,7 +58,7 @@ export default class BookListItem extends React.PureComponent {
             </View>
             <View style={[styles.infoDiv, styles.infoProgress]}>
               <Text>{'当前进度: '}</Text>
-              <Progress percent={page / size} style={styles.progress} />
+              <Progress percent={page / size * 100} style={styles.progress} />
               <Text>{`${(page / size * 100).toFixed(2)}%`}</Text>
             </View>
             <View style={styles.infoDiv}>
