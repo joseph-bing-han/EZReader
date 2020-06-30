@@ -163,8 +163,8 @@ export default class BookViewer extends React.Component {
   };
 
   onSpeakComplete = () => {
-    this.startSpeak(1);
     this.goNextPage();
+    this.startSpeak();
   };
 
   startSpeak = () => {
