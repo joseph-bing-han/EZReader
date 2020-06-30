@@ -61,6 +61,13 @@ export default {
         currentBook: newBook,
       });
     },
+
+    * clearCurrentBook(_, { put }) {
+      yield put({
+        type: 'saveCurrentBook',
+        currentBook: null,
+      });
+    },
   },
   reducers: {
     saveAllBooks(state, action) {

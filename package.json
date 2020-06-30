@@ -19,6 +19,7 @@
     "expo-font": "^8.1.1",
     "expo-sqlite-orm": "^1.5.4",
     "iconv-lite": "^0.6.0",
+    "jschardet": "^2.2.1",
     "lodash": "^4.17.15",
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.31",

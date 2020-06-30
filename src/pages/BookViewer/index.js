@@ -6,6 +6,7 @@ import * as FileSystem from 'expo-file-system';
 import { activateKeepAwake, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Speech from 'expo-speech';
 import iconv from 'iconv-lite';
+import { detect } from 'jschardet';
 import React from 'react';
 import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import Device from '../../constants/Device';
@@ -27,7 +28,7 @@ export default class BookViewer extends React.Component {
     isSpeaking: false,
     modalVisible: false,
     loading: true,
-    isUTF8: false,
+    encoding: 'utf8',
   };
 
   componentDidMount() {
@@ -46,34 +47,42 @@ export default class BookViewer extends React.Component {
   componentWillUnmount() {
     deactivateKeepAwake();
     Speech.stop();
+    this.props.dispatch({
+      type: 'home/clearCurrentBook',
+    });
   }
 
   async UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
     const { currentBook } = nextProps;
-    if (currentBook?.position !== this.state.position) {
+    if (currentBook?.uri && currentBook?.position !== this.state.position) {
       this.setState({
-        position: currentBook.position ?? 0,
-        nextPosition: currentBook.position ?? 0,
+        position: currentBook?.position ?? 0,
+        nextPosition: currentBook?.position ?? 0,
         loading: true,
-        currentPage: await this.loadBook(currentBook.position),
+        currentPage: await this.loadBook(currentBook?.position ?? 0),
       });
     }
   }
 
   loadBook = async (position = 0) => {
     const { currentBook } = this.props;
-    const base64Context = await FileSystem.readAsStringAsync(currentBook.uri, {
-      encoding: FileSystem.EncodingType.Base64,
-      position,
-      length: 2048,
-    });
-    const context = Base64.atob(base64Context);
-    iconv.skipDecodeWarning = true;
-    const utf8Context = iconv.decode(context, 'gbk');
-    this.setState({
-      isUTF8: utf8Context === context,
-    });
-    return utf8Context;
+    if (currentBook?.uri) {
+      const base64Context = await FileSystem.readAsStringAsync(currentBook.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+        position,
+        length: 2048,
+      });
+      const context = Base64.atob(base64Context);
+      iconv.skipDecodeWarning = true;
+      const { encoding } = detect(context);
+      const utf8Context = iconv.decode(context, encoding);
+
+      this.setState({
+        encoding,
+      });
+      return utf8Context;
+    }
+    return null;
   };
 
   showActionSheet = async () => {
@@ -203,7 +212,7 @@ export default class BookViewer extends React.Component {
           pageContent += text;
         }
       });
-      const originContext = this.state.isUTF8 ? pageContent : iconv.encode(pageContent, 'gbk');
+      const originContext = iconv.encode(pageContent, this.state.encoding);
       const nextPosition = this.state.position + originContext.length;
       const nextPage = await this.loadBook(nextPosition);
       this.setState({
