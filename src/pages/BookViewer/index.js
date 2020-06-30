@@ -1,4 +1,4 @@
-import { ActionSheet, Modal, Slider } from '@ant-design/react-native';
+import { ActionSheet, ActivityIndicator, Modal, Slider } from '@ant-design/react-native';
 import * as Base64 from 'Base64';
 import { connect, routerRedux } from 'dva';
 import Constants from 'expo-constants';
@@ -219,6 +219,19 @@ export default class BookViewer extends React.Component {
     const { backgroundColor, fontSize } = this.props.setting;
     const { position, currentPage } = this.state;
     const { currentBook } = this.props;
+    if (!currentBook) {
+      return (
+        <View
+          style={[styles.body, {
+            backgroundColor,
+            justifyContent: 'center',
+            alignContent: 'center',
+          }]}
+        >
+          <ActivityIndicator size='large' />
+        </View>
+      );
+    }
     const percent = Math.round((position / currentBook.size) * 10000) / 100;
     return (
       <View>
