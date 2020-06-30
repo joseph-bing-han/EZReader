@@ -1,6 +1,7 @@
-import { ActionSheet, ActivityIndicator, Modal, Slider } from '@ant-design/react-native';
+import { ActionSheet, Modal, Slider } from '@ant-design/react-native';
 import * as Base64 from 'Base64';
 import { connect, routerRedux } from 'dva';
+import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
 import { activateKeepAwake, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Speech from 'expo-speech';
@@ -10,7 +11,6 @@ import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import Device from '../../constants/Device';
 import Links from '../../constants/Links';
 import themes from '../../themes';
-import { getLineCharacterCount, getPageLineCount } from '../../utils/Utils';
 
 @connect(({ home, loading, setting }) => ({
   setting,
@@ -20,13 +20,14 @@ import { getLineCharacterCount, getPageLineCount } from '../../utils/Utils';
 
 export default class BookViewer extends React.Component {
   state = {
-    lineMax: 10,
-    pageMax: 10,
-    pages: [],
-    currentPage: -1,
+    currentPage: '',
+    nextPage: '',
+    position: -1,
+    nextPosition: -1,
     isSpeaking: false,
     modalVisible: false,
     loading: true,
+    isUTF8: false,
   };
 
   componentDidMount() {
@@ -40,12 +41,6 @@ export default class BookViewer extends React.Component {
     } else {
       this.props.dispatch(routerRedux.push(Links.HOME));
     }
-    if (this.props.setting?.fontSize) {
-      this.setState({
-        lineMax: getLineCharacterCount(this.props.setting.fontSize),
-        pageMax: getPageLineCount(this.props.setting.fontSize),
-      });
-    }
   }
 
   componentWillUnmount() {
@@ -55,55 +50,36 @@ export default class BookViewer extends React.Component {
 
   async UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
     const { currentBook } = nextProps;
-    if (this.state.pages.length === 0) {
-      const context = await FileSystem.readAsStringAsync(currentBook.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      iconv.skipDecodeWarning = true;
-      const convertContext = iconv.decode(Base64.atob(context), 'gbk');
+    if (currentBook?.position !== this.state.position) {
       this.setState({
-        loading: false,
-        currentPage: currentBook.page,
-      });
-      this.calculatePage(convertContext);
-    } else if (currentBook.page !== this.state.currentPage) {
-      this.setState({
-        currentPage: currentBook.page,
+        position: currentBook.position ?? 0,
+        nextPosition: currentBook.position ?? 0,
+        loading: true,
+        currentPage: await this.loadBook(currentBook.position),
       });
     }
   }
 
-  calculatePage = (context) => {
-    const { lineMax, pageMax } = this.state;
-    const allLines = [];
-    let currentLine = '';
-    context.split('').map((char, i) => {
-      currentLine += char;
-      if (currentLine.length === lineMax || char === '\n') {
-        allLines.push(currentLine);
-        currentLine = '';
-      }
+  loadBook = async (position = 0) => {
+    const { currentBook } = this.props;
+    const base64Context = await FileSystem.readAsStringAsync(currentBook.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+      position,
+      length: 2048,
     });
-    const pages = [];
-
-    currentLine = '';
-    let lineCount = 0;
-    allLines.map((line, i) => {
-      if (lineCount < pageMax) {
-        currentLine += line;
-      }
-      if (++lineCount === pageMax || i === allLines.length - 1) {
-        pages.push(currentLine);
-        lineCount = 0;
-        currentLine = '';
-      }
-    });
+    const context = Base64.atob(base64Context);
+    iconv.skipDecodeWarning = true;
+    const utf8Context = iconv.decode(context, 'gbk');
     this.setState({
-      pages,
+      isUTF8: utf8Context === context,
     });
+    return utf8Context;
   };
 
   showActionSheet = async () => {
+    const { position } = this.state;
+    const { currentBook } = this.props;
+    const percent = Math.round((position / currentBook.size) * 10000) / 100;
     let BUTTONS = [];
     const isSpeaking = await Speech.isSpeakingAsync();
     if (!isSpeaking) {
@@ -121,6 +97,7 @@ export default class BookViewer extends React.Component {
     }
     ActionSheet.showActionSheetWithOptions(
       {
+        title: `当前进度${percent}%`,
         options: BUTTONS,
         cancelButtonIndex: 2,
       },
@@ -152,23 +129,35 @@ export default class BookViewer extends React.Component {
   };
 
   goPreviousPage = () => {
-    const { currentPage, pages } = this.state;
-    if (currentPage > 0) {
-      this.props.dispatch({
-        type: 'home/changeBookPage',
-        page: currentPage - 1,
-        size: pages.length,
+    const { position, nextPosition } = this.state;
+    if (position > 0) {
+      const length = nextPosition - position;
+      const newPosition = position > length ? position - length : 0;
+      this.loadBook(newPosition).then((currentPage) => {
+        this.setState({
+          loading: true,
+          currentPage,
+          position: newPosition,
+        });
+        this.props.dispatch({
+          type: 'home/changeBookPosition',
+          position: newPosition,
+        });
       });
     }
   };
 
   goNextPage = () => {
-    const { pages, currentPage } = this.state;
-    if ((currentPage + 1) < pages.length) {
+    const { nextPosition, nextPage } = this.state;
+    if (nextPosition < this.props.currentBook?.size) {
+      this.setState({
+        loading: true,
+        currentPage: nextPage,
+        position: nextPosition,
+      });
       this.props.dispatch({
-        type: 'home/changeBookPage',
-        page: currentPage + 1,
-        size: pages.length,
+        type: 'home/changeBookPosition',
+        position: nextPosition,
       });
     }
   };
@@ -178,12 +167,11 @@ export default class BookViewer extends React.Component {
     this.goNextPage();
   };
 
-  startSpeak = (change = 0) => {
-    const { pages, currentPage } = this.state;
-    const pageNo = currentPage + change;
+  startSpeak = () => {
+    const { currentPage } = this.state;
     const { speakPitch, speakRate } = this.props.setting;
     if (this._speak) {
-      Speech.speak(pages[pageNo], {
+      Speech.speak(currentPage, {
         pitch: speakPitch,
         rate: speakRate,
         onDone: this.onSpeakComplete,
@@ -191,56 +179,64 @@ export default class BookViewer extends React.Component {
     }
   };
 
-  changePage = (percent) => {
-    const { pages } = this.state;
-    const currentPage = Math.floor(pages.length * percent / 100);
-    this.setState({ currentPage });
-    this.props.dispatch({
-      type: 'home/changeBookPage',
-      page: currentPage,
-      size: pages.length,
+  changePercent = (percent) => {
+    const newPosition = Math.floor(percent / 100 * this.props.currentBook.size);
+    this.loadBook(newPosition).then((currentPage) => {
+      this.setState({
+        loading: true,
+        currentPage,
+        position: newPosition,
+      });
+      this.props.dispatch({
+        type: 'home/changeBookPosition',
+        position: newPosition,
+      });
     });
+  };
+
+  onTextLayout = async ({ nativeEvent: { lines } }) => {
+    if (this.state.loading && lines.length > 1) {
+      const maxHeight = Device.height - Constants.statusBarHeight;
+      let pageContent = '';
+      lines.map(({ baseline, text }) => {
+        if (baseline < maxHeight) {
+          pageContent += text;
+        }
+      });
+      const originContext = this.state.isUTF8 ? pageContent : iconv.encode(pageContent, 'gbk');
+      const nextPosition = this.state.position + originContext.length;
+      const nextPage = await this.loadBook(nextPosition);
+      this.setState({
+        currentPage: pageContent,
+        nextPosition,
+        nextPage,
+        loading: false,
+      });
+    }
   };
 
   render() {
     const { backgroundColor, fontSize } = this.props.setting;
-    const { pages, currentPage, loading } = this.state;
-    const percent = Math.round((currentPage / pages.length) * 10000) / 100;
+    const { position, currentPage } = this.state;
+    const { currentBook } = this.props;
+    const percent = Math.round((position / currentBook.size) * 10000) / 100;
     return (
       <View>
-        {loading && (
-          <View
-            style={[styles.body, {
-              backgroundColor,
-              justifyContent: 'center',
-              alignContent: 'center',
-            }]}
-          >
-            <ActivityIndicator size='large' />
+        <TouchableWithoutFeedback onPress={this.touchScreen} onLongPress={this.showActionSheet}>
+          <View style={[styles.body, { backgroundColor }]}>
+            <Text
+              onTextLayout={this.onTextLayout}
+              onLayout={this.onLayout}
+              style={{
+                fontSize,
+                paddingLeft: 4,
+                paddingRight: 4,
+              }}
+            >
+              {currentPage}
+            </Text>
           </View>
-        )}
-        {!loading && (
-          <TouchableWithoutFeedback onPress={this.touchScreen} onLongPress={this.showActionSheet}>
-            <View style={[styles.body, { backgroundColor }]}>
-              {pages.length > 0 && (
-                <Text
-                  onLayout={this.onTextLayout}
-                  style={{
-                    fontSize,
-                    paddingTop: 14,
-                    paddingBottom: 14,
-                    paddingLeft: 4,
-                    paddingRight: 4,
-                  }}
-                >
-                  {pages[currentPage]}
-                </Text>
-              )}
-
-            </View>
-
-          </TouchableWithoutFeedback>
-        )}
+        </TouchableWithoutFeedback>
         <Modal
           transparent
           maskClosable
@@ -251,14 +247,14 @@ export default class BookViewer extends React.Component {
         >
           <View style={styles.modalContent}>
             <View>
-              <Text style={styles.labelText}>{`第${currentPage}页, 共${pages.length}页, ${percent}%`}</Text>
+              <Text style={styles.labelText}>{`${percent}%`}</Text>
             </View>
             <View style={styles.slider}>
               <Slider
                 min={0}
                 max={100}
                 defaultValue={percent}
-                onChange={this.changePage}
+                onChange={this.changePercent}
                 step={0.01}
               />
             </View>

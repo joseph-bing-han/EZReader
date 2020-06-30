@@ -14,15 +14,15 @@ export default {
         books: response,
       });
     },
-    * addNewBook({ uri, name }, { call, put }) {
+    * addNewBook({ uri, name, size }, { call, put }) {
       const existBook = yield call(retrieveBookByName, name);
       let currentBook = null;
       if (existBook) {
         // 已经有的书籍更新数据
-        currentBook = yield call(updateBook, existBook.id, name, uri, existBook.size, existBook.page);
+        currentBook = yield call(updateBook, existBook.id, name, uri, existBook.size, existBook.position);
       } else {
         // 没有则新建
-        currentBook = yield call(createBook, name, uri);
+        currentBook = yield call(createBook, name, uri, size);
       }
       // yield put({
       //   type: 'saveCurrentBook',
@@ -43,18 +43,17 @@ export default {
 
     * openBook({ id }, { call, put }) {
       const currentBook = yield call(retrieveBook, id);
-      yield call(updateBook, currentBook.id, currentBook.name, currentBook.uri, currentBook.size, currentBook.page);
+      yield call(updateBook, currentBook.id, currentBook.name, currentBook.uri, currentBook.size, currentBook.position);
       yield put({
         type: 'saveCurrentBook',
         currentBook,
       });
     },
 
-    * changeBookPage({ page = 0, size = 9999 }, { select, call, put }) {
+    * changeBookPosition({ position = 0 }, { select, call, put }) {
       const { currentBook } = yield select((data) => data.home);
-      currentBook.page = page;
-      currentBook.size = size;
-      yield call(updateBook, currentBook.id, currentBook.name, currentBook.uri, size, page);
+      currentBook.position = position;
+      yield call(updateBook, currentBook.id, currentBook.name, currentBook.uri, currentBook.size, currentBook.position);
       const newBook = {};
       Object.assign(newBook, currentBook);
       yield put({

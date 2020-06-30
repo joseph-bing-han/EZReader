@@ -35,7 +35,7 @@ export default class Book extends BaseModel {
         not_null: true,
         default: 0,
       },
-      page: {
+      position: {
         type: types.INTEGER,
         not_null: true,
         default: 0,
@@ -65,25 +65,25 @@ export async function retrieveBook(id) {
   return Book.find(id);
 }
 
-export async function updateBook(id, name, uri, size = 9999, page = 0) {
+export async function updateBook(id, name, uri, size = 9999, position = 0) {
   const props = {
     id,
     name,
     uri,
     size,
-    page,
+    position,
     updated_at: Date.now(),
   };
   await Book.update(props);
   return Book.find(id);
 }
 
-export async function createBook(name, uri) {
+export async function createBook(name, uri, size) {
   const props = {
     name,
     uri,
-    size: 999,
-    page: 0,
+    size,
+    position: 0,
     updated_at: Date.now(),
   };
   return Book.create(props);

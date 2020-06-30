@@ -38,7 +38,7 @@ export default class Home extends React.Component {
   };
 
   addNewBook = async () => {
-    const { uri, name, type } = await DocumentPicker.getDocumentAsync({
+    const { uri, name, size, type } = await DocumentPicker.getDocumentAsync({
       type: 'text/plain',
       copyToCacheDirectory: true,
     });
@@ -51,6 +51,7 @@ export default class Home extends React.Component {
         type: 'home/addNewBook',
         uri,
         name: names.join(),
+        size,
       });
     }
   };
@@ -59,8 +60,8 @@ export default class Home extends React.Component {
     <BookListHeader total={this.props?.books?.length || 0} onPress={this.addNewBook} />
   );
 
-  renderItem = ({ id, name, size, page, updated_at }) => (
-    <BookListItem id={id} name={name} size={size} page={page} updated_at={updated_at} />
+  renderItem = ({ id, name, size, position, updated_at }) => (
+    <BookListItem id={id} name={name} size={size} position={position} updated_at={updated_at} />
   );
 
   render() {

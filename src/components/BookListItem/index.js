@@ -43,7 +43,7 @@ export default class BookListItem extends React.PureComponent {
   };
 
   render() {
-    const { id, name, size, page, updated_at } = this.props;
+    const { id, name, size, position, updated_at } = this.props;
     return (
       <Link linkTo={`${Links.VIEWER}/${id}`}>
         <View style={styles.body}>
@@ -56,10 +56,13 @@ export default class BookListItem extends React.PureComponent {
             <View style={styles.infoDiv}>
               <Text numberOfLines={2} ellipsizeMode={'tail'}>{`书籍名称: ${name}`}</Text>
             </View>
+            <View style={styles.infoDiv}>
+              <Text numberOfLines={2} ellipsizeMode={'tail'}>{`书籍大小: ${(size / 1024 / 1024).toFixed(2)}M`}</Text>
+            </View>
             <View style={[styles.infoDiv, styles.infoProgress]}>
               <Text>{'当前进度: '}</Text>
-              <Progress percent={page / size * 100} style={styles.progress} />
-              <Text>{`${(page / size * 100).toFixed(2)}%`}</Text>
+              <Progress percent={position / size * 100} style={styles.progress} />
+              <Text>{`${(position / size * 100).toFixed(2)}%`}</Text>
             </View>
             <View style={styles.infoDiv}>
               <Text>{`阅读时间: ${moment(updated_at).format('lll')}`}</Text>
@@ -83,7 +86,7 @@ export default class BookListItem extends React.PureComponent {
 
 const styles = StyleSheet.create({
   body: {
-    backgroundColor: `${themes.color_dark_green}77`,
+    backgroundColor: `${themes.color_light_yellow}77`,
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 2,

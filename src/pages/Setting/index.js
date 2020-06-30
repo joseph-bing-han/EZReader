@@ -89,8 +89,8 @@ export default class Home extends React.Component {
           </View>
           <View style={styles.item}>
             <View style={styles.label}><Text style={styles.labelText}>字体大小:</Text></View>
-            {fontSizeList.map((size) => (
-              <TouchableOpacity onPress={() => { this.updateSize(size); }}>
+            {fontSizeList.map((size, i) => (
+              <TouchableOpacity key={i} onPress={() => { this.updateSize(size); }}>
                 <View style={[size === fontSize ? styles.fontSizeActive : styles.fontSize, { height: 6 + size * 1.2 }]}>
                   <Text
                     style={{
