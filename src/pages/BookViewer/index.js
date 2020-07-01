@@ -52,6 +52,12 @@ export default class BookViewer extends React.Component {
     });
   }
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevState.currentPage !== this.state.currentPage && !this.state.loading) {
+      this.startSpeak();
+    }
+  }
+
   async UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
     const { currentBook } = nextProps;
     if (currentBook?.uri && currentBook?.position !== this.state.position) {
@@ -129,10 +135,8 @@ export default class BookViewer extends React.Component {
   touchScreen = ({ nativeEvent: { locationY } }) => {
     Speech.stop();
     if (locationY > (Device.height / 2)) {
-      this.startSpeak(+1);
       this.goNextPage();
     } else {
-      this.startSpeak(-1);
       this.goPreviousPage();
     }
   };
@@ -173,13 +177,13 @@ export default class BookViewer extends React.Component {
 
   onSpeakComplete = () => {
     this.goNextPage();
-    this.startSpeak();
   };
 
   startSpeak = () => {
     const { currentPage } = this.state;
     const { speakPitch, speakRate } = this.props.setting;
     if (this._speak) {
+      console.log('BookViewer-startSpeak-188:', currentPage);
       Speech.speak(currentPage, {
         pitch: speakPitch,
         rate: speakRate,
