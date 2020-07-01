@@ -28,7 +28,7 @@ export default class BookViewer extends React.Component {
     isSpeaking: false,
     modalVisible: false,
     loading: true,
-    encoding: 'utf8',
+    encoding: null,
   };
 
   componentDidMount() {
@@ -80,12 +80,17 @@ export default class BookViewer extends React.Component {
       });
       const context = Base64.atob(base64Context);
       iconv.skipDecodeWarning = true;
-      const { encoding } = detect(context);
-      const utf8Context = iconv.decode(context, encoding);
+      let txtEncoding = this.state.encoding;
+      if (!txtEncoding) {
+        const { encoding } = detect(context);
+        this.setState({
+          encoding,
+        });
+        txtEncoding = encoding ?? 'utf-8';
+      }
 
-      this.setState({
-        encoding,
-      });
+      const utf8Context = iconv.decode(context, txtEncoding);
+
       return utf8Context;
     }
     return null;
@@ -132,20 +137,40 @@ export default class BookViewer extends React.Component {
     );
   };
 
+  checkPosition = async (position) => {
+    const { currentBook } = this.props;
+    if (currentBook?.uri) {
+      const base64Context = await FileSystem.readAsStringAsync(currentBook.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+        position,
+        length: 32,
+      });
+      const context = Base64.atob(base64Context);
+      iconv.skipDecodeWarning = true;
+      const { encoding } = detect(context);
+      return encoding !== null;
+    }
+    return false;
+  };
+
   touchScreen = ({ nativeEvent: { locationY } }) => {
     Speech.stop();
     if (locationY > (Device.height / 2)) {
       this.goNextPage();
     } else {
-      this.goPreviousPage();
+      this.goPreviousPage().then();
     }
   };
 
-  goPreviousPage = () => {
+  goPreviousPage = async () => {
     const { position, nextPosition } = this.state;
     if (position > 0) {
       const length = nextPosition - position;
-      const newPosition = position > length ? position - length : 0;
+      let newPosition = position > length ? position - length : 0;
+      // eslint-disable-next-line no-await-in-loop
+      while (newPosition > 0 && await this.checkPosition(newPosition) !== true) {
+        newPosition--;
+      }
       this.loadBook(newPosition).then((currentPage) => {
         this.setState({
           loading: true,
@@ -183,7 +208,6 @@ export default class BookViewer extends React.Component {
     const { currentPage } = this.state;
     const { speakPitch, speakRate } = this.props.setting;
     if (this._speak) {
-      console.log('BookViewer-startSpeak-188:', currentPage);
       Speech.speak(currentPage, {
         pitch: speakPitch,
         rate: speakRate,
@@ -216,7 +240,7 @@ export default class BookViewer extends React.Component {
           pageContent += text;
         }
       });
-      const originContext = iconv.encode(pageContent, this.state.encoding);
+      const originContext = iconv.encode(pageContent, this.state.encoding ?? 'utf-8');
       const nextPosition = this.state.position + originContext.length;
       const nextPage = await this.loadBook(nextPosition);
       this.setState({
