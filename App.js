@@ -58,17 +58,11 @@ export default class App extends React.PureComponent {
       return false;
     });
 
-    await Font.loadAsync(
-      'antoutline',
-      // eslint-disable-next-line
-      require('@ant-design/icons-react-native/fonts/antoutline.ttf'),
-    );
+    await Font.loadAsync({
+      antoutline: require('@ant-design/icons-react-native/fonts/antoutline.ttf'),
+      antfill: require('@ant-design/icons-react-native/fonts/antfill.ttf'),
+    });
 
-    await Font.loadAsync(
-      'antfill',
-      // eslint-disable-next-line
-      require('@ant-design/icons-react-native/fonts/antfill.ttf'),
-    );
     // eslint-disable-next-line
     this.setState({ isReady: true });
   }
