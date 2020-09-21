@@ -54,18 +54,18 @@ export default class BookListItem extends React.PureComponent {
           </View>
           <View style={styles.info}>
             <View style={styles.infoDiv}>
-              <Text numberOfLines={2} ellipsizeMode={'tail'}>{`书籍名称: ${name}`}</Text>
+              <Text style={styles.normalText} numberOfLines={2} ellipsizeMode={'tail'}>{`书籍名称: ${name}`}</Text>
             </View>
             <View style={styles.infoDiv}>
-              <Text numberOfLines={2} ellipsizeMode={'tail'}>{`书籍大小: ${(size / 1024 / 1024).toFixed(2)}M`}</Text>
+              <Text style={styles.normalText} numberOfLines={2} ellipsizeMode={'tail'}>{`书籍大小: ${(size / 1024 / 1024).toFixed(2)}M`}</Text>
             </View>
             <View style={[styles.infoDiv, styles.infoProgress]}>
-              <Text>{'当前进度: '}</Text>
+              <Text style={styles.normalText}>{'当前进度: '}</Text>
               <Progress percent={position / size * 100} style={styles.progress} />
-              <Text>{`${(position / size * 100).toFixed(2)}%`}</Text>
+              <Text style={styles.normalText}>{`${(position / size * 100).toFixed(2)}%`}</Text>
             </View>
             <View style={styles.infoDiv}>
-              <Text>{`阅读时间: ${moment(updated_at).format('lll')}`}</Text>
+              <Text style={styles.normalText}>{`阅读时间: ${moment(updated_at).format('lll')}`}</Text>
             </View>
           </View>
           <View style={styles.remove}>
@@ -133,4 +133,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  normalText:{
+    color:themes.color_text_base,
+  }
 });

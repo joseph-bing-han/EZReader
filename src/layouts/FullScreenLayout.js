@@ -11,7 +11,7 @@ export default ({ component: Component, ...rest }) => (
         style={{
           flex: 1,
           flexDirection: 'column',
-          paddingTop: Constants.statusBarHeight,
+          // paddingTop: Constants.statusBarHeight,
         }}
       >
         <View style={{ height: Dimensions.get('window').height - Constants.statusBarHeight }}>

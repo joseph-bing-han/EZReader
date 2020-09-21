@@ -44,40 +44,45 @@ export default class BookViewer extends React.Component {
       this.props.dispatch(routerRedux.push(Links.HOME));
     }
     this.callDetector = new CallDetectorManager((event, phoneNumber) => {
-      // For iOS event will be either "Connected",
-      // "Disconnected","Dialing" and "Incoming"
+        // For iOS event will be either "Connected",
+        // "Disconnected","Dialing" and "Incoming"
 
-      // For Android event will be either "Offhook",
-      // "Disconnected", "Incoming" or "Missed"
-      // phoneNumber should store caller/called number
-      console.log('BookViewer--53:', event, phoneNumber);
-      if (event === 'Disconnected') {
-        // Do something call got disconnected
-      } else if (event === 'Connected') {
-        // Do something call got connected
-        // This clause will only be executed for iOS
-      } else if (event === 'Incoming') {
-        // Do something call got incoming
-      } else if (event === 'Dialing') {
-        // Do something call got dialing
-        // This clause will only be executed for iOS
-      } else if (event === 'Offhook') {
-        // Device call state: Off-hook.
-        // At least one call exists that is dialing,
-        // active, or on hold,
-        // and no calls are ringing or waiting.
-        // This clause will only be executed for Android
-      } else if (event === 'Missed') {
-        // Do something call got missed
-        // This clause will only be executed for Android
-      }
-    },
-    false, // if you want to read the phone number of the incoming call [ANDROID], otherwise false
-    () => {}, // callback if your permission got denied [ANDROID] [only if you want to read incoming number] default: console.error
-    {
-      title: 'Phone State Permission',
-      message: 'This app needs access to your phone state in order to react and/or to adapt to incoming calls.',
-    }, // a custom permission request message to explain to your user, why you need the permission [recommended] - this is the default one
+        // For Android event will be either "Offhook",
+        // "Disconnected", "Incoming" or "Missed"
+        // phoneNumber should store caller/called number
+        if (event === 'Disconnected') {
+          // Do something call got disconnected
+        } else if (event === 'Connected') {
+          // Do something call got connected
+          // This clause will only be executed for iOS
+          // 来电话时暂停朗读
+          this.stopSpeak();
+        } else if (event === 'Incoming') {
+          // Do something call got incoming
+        } else if (event === 'Dialing') {
+          // Do something call got dialing
+          // This clause will only be executed for iOS
+          // 来电话时暂停朗读
+          this.stopSpeak();
+        } else if (event === 'Offhook') {
+          // Device call state: Off-hook.
+          // At least one call exists that is dialing,
+          // active, or on hold,
+          // and no calls are ringing or waiting.
+          // This clause will only be executed for Android
+          // 来电话时暂停朗读
+          this.stopSpeak();
+        } else if (event === 'Missed') {
+          // Do something call got missed
+          // This clause will only be executed for Android
+        }
+      },
+      false, // if you want to read the phone number of the incoming call [ANDROID], otherwise false
+      () => {}, // callback if your permission got denied [ANDROID] [only if you want to read incoming number] default: console.error
+      {
+        title: 'Phone State Permission',
+        message: 'This app needs access to your phone state in order to react and/or to adapt to incoming calls.',
+      }, // a custom permission request message to explain to your user, why you need the permission [recommended] - this is the default one
     );
   }
 
@@ -254,6 +259,13 @@ export default class BookViewer extends React.Component {
     }
   };
 
+  stopSpeak = () => {
+    if (this._speak) {
+      Speech.stop();
+      this._speak = false;
+    }
+  };
+
   changePercent = (percent) => {
     const newPosition = Math.floor(percent / 100 * this.props.currentBook.size);
     this.loadBook(newPosition).then((currentPage) => {
@@ -316,6 +328,7 @@ export default class BookViewer extends React.Component {
               onTextLayout={this.onTextLayout}
               onLayout={this.onLayout}
               style={{
+                ...styles.normalText,
                 fontSize,
                 paddingLeft: 4,
                 paddingRight: 4,
@@ -366,5 +379,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingBottom: 10,
   },
-
+  normalText: {
+    color: themes.color_text_base,
+  },
 });
