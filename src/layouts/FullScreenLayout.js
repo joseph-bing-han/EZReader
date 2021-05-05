@@ -5,13 +5,14 @@ import { Dimensions, View } from 'react-native';
 
 const { Route } = router;
 export default ({ component: Component, ...rest }) => (
-  <Route {...rest}
+  <Route
+    {...rest}
     render={(matchProps) => (
       <View
         style={{
           flex: 1,
           flexDirection: 'column',
-          // paddingTop: Constants.statusBarHeight,
+          paddingTop: Constants.statusBarHeight,
         }}
       >
         <View style={{ height: Dimensions.get('window').height - Constants.statusBarHeight }}>

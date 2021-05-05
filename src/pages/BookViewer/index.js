@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { ActionSheet, ActivityIndicator, Modal, Slider } from '@ant-design/react-native';
 import * as Base64 from 'Base64';
 import { connect, routerRedux } from 'dva';
@@ -22,6 +23,7 @@ import themes from '../../themes';
 
 export default class BookViewer extends React.Component {
   state = {
+    speechPage: null,
     currentPage: '',
     nextPage: '',
     position: -1,
@@ -29,11 +31,13 @@ export default class BookViewer extends React.Component {
     isSpeaking: false,
     modalVisible: false,
     loading: true,
+    cacheLoading: false,
     encoding: null,
   };
 
   componentDidMount() {
     activateKeepAwake();
+    // MusicControl.enableBackgroundMode(true);
     const { params } = this.props.match;
     if (params?.id) {
       this.props.dispatch({
@@ -43,7 +47,8 @@ export default class BookViewer extends React.Component {
     } else {
       this.props.dispatch(routerRedux.push(Links.HOME));
     }
-    this.callDetector = new CallDetectorManager((event, phoneNumber) => {
+    this.callDetector = new CallDetectorManager(
+      (event, phoneNumber) => {
         // For iOS event will be either "Connected",
         // "Disconnected","Dialing" and "Incoming"
 
@@ -212,7 +217,7 @@ export default class BookViewer extends React.Component {
       let newPosition = position > length ? position - length : 0;
       // eslint-disable-next-line no-await-in-loop
       while (newPosition > 0 && await this.checkPosition(newPosition) !== true) {
-        newPosition--;
+        newPosition -= 1;
       }
       this.loadBook(newPosition).then((currentPage) => {
         this.setState({
@@ -244,17 +249,32 @@ export default class BookViewer extends React.Component {
   };
 
   onSpeakComplete = () => {
+    const { currentPage, speechPage, nextPage } = this.state;
+    if (this._speak && speechPage === currentPage && speechPage !== nextPage) {
+      console.log('BookViewer-onSpeakComplete-253:', '使用缓存');
+      this.startSpeak(true);
+    }
     this.goNextPage();
   };
 
-  startSpeak = () => {
-    const { currentPage } = this.state;
+  startSpeak = (usingCache) => {
+    const { currentPage, nextPage, speechPage } = this.state;
     const { speakPitch, speakRate } = this.props.setting;
+
     if (this._speak) {
-      Speech.speak(currentPage, {
+      let speechText = currentPage;
+
+      if (usingCache && nextPage !== speechPage) {
+        speechText = nextPage;
+      }
+
+      Speech.speak(speechText, {
         pitch: speakPitch,
         rate: speakRate,
         onDone: this.onSpeakComplete,
+      });
+      this.setState({
+        speechPage: speechText,
       });
     }
   };
@@ -298,13 +318,30 @@ export default class BookViewer extends React.Component {
         nextPosition,
         nextPage,
         loading: false,
+        cacheLoading: true,
+      });
+    }
+  };
+
+  onHiddenTextLayout = async ({ nativeEvent: { lines } }) => {
+    if (this.state.cacheLoading && lines.length > 1) {
+      const maxHeight = Device.height - Constants.statusBarHeight;
+      let pageContent = '';
+      lines.map(({ baseline, text }) => {
+        if (baseline < maxHeight) {
+          pageContent += text;
+        }
+      });
+      this.setState({
+        nextPage: pageContent,
+        cacheLoading: false,
       });
     }
   };
 
   render() {
     const { backgroundColor, fontSize } = this.props.setting;
-    const { position, currentPage } = this.state;
+    const { position, currentPage, nextPage } = this.state;
     const { currentBook } = this.props;
     if (!currentBook) {
       return (
@@ -332,9 +369,24 @@ export default class BookViewer extends React.Component {
                 fontSize,
                 paddingLeft: 4,
                 paddingRight: 4,
+                zIndex: 99,
+                backgroundColor,
               }}
             >
               {currentPage}
+            </Text>
+            <Text
+              onTextLayout={this.onHiddenTextLayout}
+              onLayout={this.onLayout}
+              style={{
+                ...styles.normalText,
+                fontSize,
+                paddingLeft: 4,
+                paddingRight: 4,
+                zIndex: 0,
+              }}
+            >
+              {nextPage}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -381,5 +433,6 @@ const styles = StyleSheet.create({
   },
   normalText: {
     color: themes.color_text_base,
+    position: 'absolute',
   },
 });

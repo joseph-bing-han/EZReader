@@ -10,29 +10,29 @@ const ORDER_KEY = 'EZBook-order';
 const BY_KEY = 'EZBook-by';
 
 export async function getFontSize() {
-  return await Storage.getItem(FONT_SIZE_KEY) ?? 20;
+  return (await Storage.getItem(FONT_SIZE_KEY)) ?? 20;
 }
 
 export async function getBackgroundColor() {
-  return await Storage.getItem(COLOR_KEY) ?? theme.color_light_green;
+  return (await Storage.getItem(COLOR_KEY)) ?? theme.color_light_green;
 }
 
 export async function getSpeakPitch() {
-  const pitch = await Storage.getItem(SPEAK_PITCH_KEY) ?? '1.0';
+  const pitch = (await Storage.getItem(SPEAK_PITCH_KEY)) ?? '1.0';
   return Math.round(parseFloat(pitch) * 10) / 10;
 }
 
 export async function getSpeakRate() {
-  const pitch = await Storage.getItem(SPEAK_RATE_KEY) ?? '1.0';
+  const pitch = (await Storage.getItem(SPEAK_RATE_KEY)) ?? '1.0';
   return Math.round(parseFloat(pitch) * 10) / 10;
 }
 
 export async function getOrder() {
-  return await Storage.getItem(ORDER_KEY) ?? Sort.ORDER_UPDATE;
+  return (await Storage.getItem(ORDER_KEY)) ?? Sort.ORDER_UPDATE;
 }
 
 export async function getBy() {
-  return await Storage.getItem(BY_KEY) ?? Sort.BY_DESC;
+  return (await Storage.getItem(BY_KEY)) ?? Sort.BY_DESC;
 }
 
 export async function setFontSize(size = 20) {

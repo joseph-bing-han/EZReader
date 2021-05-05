@@ -7,14 +7,21 @@ import themes from '../themes';
 
 const { Route } = router;
 export default ({ component: Component, ...rest }) => (
-  <Route {...rest}
+  <Route
+    {...rest}
     render={(matchProps) => (
-      <View style={{
-        flex: 1,
-        flexDirection: 'column',
-        // paddingTop: Constants.statusBarHeight
-      }}>
-        <View style={{ height: Dimensions.get('window').height - themes.tab_bar_height - Constants.statusBarHeight }}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'column',
+          paddingTop: Constants.statusBarHeight,
+        }}
+      >
+        <View
+          style={{
+            height: Dimensions.get('window').height - themes.tab_bar_height - Constants.statusBarHeight,
+          }}
+        >
           <Component {...matchProps} />
         </View>
         <FooterBar currentLink={rest.path} />

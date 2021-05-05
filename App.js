@@ -1,16 +1,15 @@
 import Provider from '@ant-design/react-native/lib/provider/index';
 import dva from 'dva';
 import createLoading from 'dva-loading';
-import { AppLoading } from 'expo';
 import * as Font from 'expo-font';
 import { createMemoryHistory } from 'history';
 import React from 'react';
-import { BackHandler } from 'react-native';
+import { BackHandler, LogBox } from 'react-native';
 import models from './src/models';
 import routers from './src/router';
 import defaultThemes from './src/themes';
-
-console.disableYellowBox = true;
+import AppLoading from 'expo-app-loading';
+LogBox.ignoreAllLogs();
 
 const dvaApp = dva({
   history: createMemoryHistory(), // Trick !!
