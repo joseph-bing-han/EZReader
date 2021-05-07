@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { ActionSheet, ActivityIndicator, Modal, Slider } from '@ant-design/react-native';
+import { ActionSheet, ActivityIndicator, Button, Flex, Modal, Slider, WingBlank } from '@ant-design/react-native';
 import * as Base64 from 'Base64';
 import { connect, routerRedux } from 'dva';
 import Constants from 'expo-constants';
@@ -11,6 +11,7 @@ import { detect } from 'jschardet';
 import React from 'react';
 import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import CallDetectorManager from 'react-native-call-detection';
+import KeyEvent from 'react-native-keyevent';
 import Device from '../../constants/Device';
 import Links from '../../constants/Links';
 import themes from '../../themes';
@@ -37,7 +38,6 @@ export default class BookViewer extends React.Component {
 
   componentDidMount() {
     activateKeepAwake();
-    // MusicControl.enableBackgroundMode(true);
     const { params } = this.props.match;
     if (params?.id) {
       this.props.dispatch({
@@ -89,6 +89,15 @@ export default class BookViewer extends React.Component {
         message: 'This app needs access to your phone state in order to react and/or to adapt to incoming calls.',
       }, // a custom permission request message to explain to your user, why you need the permission [recommended] - this is the default one
     );
+    // if you want to react to keyUp
+    KeyEvent.onKeyUpListener((keyEvent) => {
+      if (keyEvent.keyCode === 24) {
+        this._speak = true;
+        this.startSpeak();
+      } else if (keyEvent.keyCode === 25) {
+        this.stopSpeak();
+      }
+    });
   }
 
   componentWillUnmount() {
@@ -98,6 +107,7 @@ export default class BookViewer extends React.Component {
       type: 'home/clearCurrentBook',
     });
     this.callDetector && this.callDetector.dispose();
+    KeyEvent.removeKeyUpListener();
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -384,6 +394,7 @@ export default class BookViewer extends React.Component {
                 paddingLeft: 4,
                 paddingRight: 4,
                 zIndex: 0,
+                color: backgroundColor,
               }}
             >
               {nextPage}
@@ -400,7 +411,40 @@ export default class BookViewer extends React.Component {
         >
           <View style={styles.modalContent}>
             <View>
-              <Text style={styles.labelText}>{`${percent}%`}</Text>
+              <WingBlank>
+                <Flex>
+                  <Flex.Item>
+                    <Button
+                      style={styles.stepperButton}
+                      type='ghost'
+                      size='small'
+                      onPress={() => {
+                        if (percent > 0) {
+                          this.changePercent(percent - 0.01);
+                        }
+                      }}
+                    >-</Button>
+                  </Flex.Item>
+                  <Flex.Item>
+                    <Text style={styles.labelText}>{`${percent}%`}</Text>
+                  </Flex.Item>
+                  <Flex.Item>
+                    <Button
+                      style={{
+                        ...styles.stepperButton,
+                        marginLeft: 40,
+                      }}
+                      type='ghost'
+                      size='small'
+                      onPress={() => {
+                        if (percent < 100) {
+                          this.changePercent(percent + 0.01);
+                        }
+                      }}
+                    >+</Button>
+                  </Flex.Item>
+                </Flex>
+              </WingBlank>
             </View>
             <View style={styles.slider}>
               <Slider
@@ -434,5 +478,9 @@ const styles = StyleSheet.create({
   normalText: {
     color: themes.color_text_base,
     position: 'absolute',
+  },
+  stepperButton: {
+    width: 40,
+    marginBottom: 6,
   },
 });

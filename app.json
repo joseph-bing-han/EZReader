@@ -23,11 +23,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "net.josephhan.ezreader",
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.1.0"
     },
     "android": {
       "package": "net.josephhan.ezreader",
-      "versionCode": 1
+      "versionCode": 3
     }
   }
 }

@@ -18,12 +18,12 @@ export async function getBackgroundColor() {
 }
 
 export async function getSpeakPitch() {
-  const pitch = (await Storage.getItem(SPEAK_PITCH_KEY)) ?? '1.0';
+  const pitch = (await Storage.getItem(SPEAK_PITCH_KEY)) ?? '1.1';
   return Math.round(parseFloat(pitch) * 10) / 10;
 }
 
 export async function getSpeakRate() {
-  const pitch = (await Storage.getItem(SPEAK_RATE_KEY)) ?? '1.0';
+  const pitch = (await Storage.getItem(SPEAK_RATE_KEY)) ?? '1.7';
   return Math.round(parseFloat(pitch) * 10) / 10;
 }
 

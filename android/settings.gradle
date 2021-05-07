@@ -1,4 +1,4 @@
-rootProject.name = 'EZReader'
+rootProject.name = '易读EZReader'
 
 apply from: '../node_modules/react-native-unimodules/gradle.groovy'
 includeUnimodulesProjects()
