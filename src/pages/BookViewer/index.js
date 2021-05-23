@@ -280,7 +280,7 @@ export default class BookViewer extends React.Component {
         speechText = nextPage;
       }
 
-      const textSpeech = speechText.replace(/[\s\r\n]/ig, '');
+      const textSpeech = speechText.replace(/[\s\r\n]/ig, '').replace('。', '，');
       Speech.speak(textSpeech, {
         pitch: speakPitch,
         rate: speakRate,
