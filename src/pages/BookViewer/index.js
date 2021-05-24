@@ -110,12 +110,6 @@ export default class BookViewer extends React.Component {
     KeyEvent.removeKeyUpListener();
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if (prevState.currentPage !== this.state.currentPage && !this.state.loading) {
-      this.startSpeak();
-    }
-  }
-
   async UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
     const { currentBook } = nextProps;
     if (currentBook?.uri && currentBook?.position !== this.state.position) {
@@ -211,12 +205,10 @@ export default class BookViewer extends React.Component {
     return false;
   };
 
-  compareTwoPages = (first, second) => second.indexOf(first.substring(0, 20)) !== -1;
-
   touchScreen = ({ nativeEvent: { locationY } }) => {
     Speech.stop();
     if (locationY > (Device.height / 2)) {
-      this.goNextPage();
+      this.goNextPage(true);
     } else {
       this.goPreviousPage().then();
     }
@@ -262,8 +254,7 @@ export default class BookViewer extends React.Component {
 
   onSpeakComplete = () => {
     const { currentPage, speechPage, nextPage } = this.state;
-    if (this._speak && this.compareTwoPages(speechPage, currentPage) && !this.compareTwoPages(speechPage, nextPage)) {
-      console.log('BookViewer-onSpeakComplete-253:', '使用缓存');
+    if (this._speak && speechPage === currentPage && speechPage !== nextPage) {
       this.startSpeak(true);
     }
     this.goNextPage();
@@ -272,15 +263,14 @@ export default class BookViewer extends React.Component {
   startSpeak = (usingCache) => {
     const { currentPage, nextPage, speechPage } = this.state;
     const { speakPitch, speakRate } = this.props.setting;
-
     if (this._speak) {
       let speechText = currentPage;
-
-      if (usingCache && !this.compareTwoPages(nextPage, speechPage)) {
+      if (usingCache && nextPage !== speechPage) {
         speechText = nextPage;
       }
 
-      const textSpeech = speechText.replace(/[\s\r\n]/ig, '').replace('。', '，');
+      const textSpeech = speechText.replace(/[\s\r\n]/ig, '').replace(/[？。]/ig, '，');
+      console.log('BookViewer-startSpeak-282:', textSpeech);
       Speech.speak(textSpeech, {
         pitch: speakPitch,
         rate: speakRate,
@@ -333,6 +323,10 @@ export default class BookViewer extends React.Component {
         loading: false,
         cacheLoading: true,
       });
+      const isSpeaking = await Speech.isSpeakingAsync();
+      if (!isSpeaking) {
+        this.startSpeak();
+      }
     }
   };
 
@@ -398,6 +392,7 @@ export default class BookViewer extends React.Component {
                 paddingRight: 4,
                 zIndex: 0,
                 color: backgroundColor,
+                backgroundColor,
               }}
             >
               {nextPage}
