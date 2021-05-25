@@ -205,6 +205,8 @@ export default class BookViewer extends React.Component {
     return false;
   };
 
+  compareTwoPages = (first, second) => second.indexOf(first.substring(0, 20)) !== -1;
+
   touchScreen = ({ nativeEvent: { locationY } }) => {
     Speech.stop();
     if (locationY > (Device.height / 2)) {
@@ -254,7 +256,7 @@ export default class BookViewer extends React.Component {
 
   onSpeakComplete = () => {
     const { currentPage, speechPage, nextPage } = this.state;
-    if (this._speak && speechPage === currentPage && speechPage !== nextPage) {
+    if (this._speak && this.compareTwoPages(speechPage, currentPage) && !this.compareTwoPages(speechPage, nextPage)) {
       this.startSpeak(true);
     }
     this.goNextPage();
@@ -265,12 +267,12 @@ export default class BookViewer extends React.Component {
     const { speakPitch, speakRate } = this.props.setting;
     if (this._speak) {
       let speechText = currentPage;
-      if (usingCache && nextPage !== speechPage) {
+      if (usingCache && !this.compareTwoPages(nextPage, speechPage)) {
         speechText = nextPage;
       }
 
-      const textSpeech = speechText.replace(/[\s\r\n]/ig, '').replace(/[？。]/ig, '，');
-      console.log('BookViewer-startSpeak-282:', textSpeech);
+      const textSpeech = speechText.replace(/[\s\r\n]/ig, '');
+      // console.log('BookViewer-startSpeak-282:', textSpeech);
       Speech.speak(textSpeech, {
         pitch: speakPitch,
         rate: speakRate,
